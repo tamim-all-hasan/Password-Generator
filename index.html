@@ -2,122 +2,201 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <!-- IMPORTANT for mobile view -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Password Generator</title>
-
+    <title>Pro Password Generator</title>
     <style>
+        :root {
+            --primary-color: #6366f1;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            color: #333;
         }
 
         .container {
             background: white;
             width: 90%;
-            max-width: 360px;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            text-align: center;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
         }
 
         h1 {
-            font-size: 22px;
+            font-size: 24px;
             margin-bottom: 20px;
+            text-align: center;
+            color: #1a1a1a;
         }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            outline: none;
-        }
-
-        button {
-            width: 100%;
-            margin-top: 15px;
-            padding: 12px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            background: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-
-        button:active {
-            transform: scale(0.98);
+        .result-container {
+            background: #f0f2f5;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
         }
 
         #password {
-            margin-top: 20px;
-            padding: 10px;
             font-size: 18px;
             font-weight: bold;
             word-break: break-all;
+            color: #222;
         }
 
-        /* Tablet & Desktop */
-        @media (min-width: 768px) {
-            .container {
-                max-width: 420px;
-            }
-            h1 {
-                font-size: 26px;
-            }
+        .copy-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+
+        .copy-btn:hover { background: #4f46e5; }
+
+        .strength-meter {
+            height: 6px;
+            width: 100%;
+            background: #eee;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        #strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: 0.5s;
+        }
+
+        .options {
+            text-align: left;
+        }
+
+        .option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        input[type="number"] {
+            width: 50px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button.generate-btn {
+            width: 100%;
+            margin-top: 15px;
+            padding: 14px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button.generate-btn:hover {
+            background: #4f46e5;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Password Generator</h1>
+        <h1>PassGen Pro</h1>
 
-        <input type="number" id="length" placeholder="Password length (min 3)">
+        <div class="result-container">
+            <span id="password">Click Generate</span>
+            <button class="copy-btn" onclick="copyPassword()">Copy</button>
+        </div>
 
-        <button onclick="generatePassword()">Generate Password</button>
+        <div class="strength-meter">
+            <div id="strength-bar"></div>
+        </div>
 
-        <div id="password"></div>
+        <div class="options">
+            <div class="option">
+                <label>Password Length</label>
+                <input type="number" id="length" value="12" min="6" max="30">
+            </div>
+            <div class="option">
+                <label>Include Numbers</label>
+                <input type="checkbox" id="numbers" checked>
+            </div>
+            <div class="option">
+                <label>Include Symbols</label>
+                <input type="checkbox" id="symbols" checked>
+            </div>
+        </div>
+
+        <button class="generate-btn" onclick="generatePassword()">Generate Password</button>
     </div>
 
     <script>
         function generatePassword() {
+            const length = document.getElementById("length").value;
+            const hasNumbers = document.getElementById("numbers").checked;
+            const hasSymbols = document.getElementById("symbols").checked;
+
             const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
             const numbers = "0123456789";
-            const symbols = "!@#$%^&*()_+{}[]<>?,.";
+            const symbols = "!@#$%^&*()_+{}[]?";
 
-            const length = document.getElementById("length").value;
-            const output = document.getElementById("password");
+            let charset = letters;
+            if (hasNumbers) charset += numbers;
+            if (hasSymbols) charset += symbols;
 
-            if (length < 3) {
-                output.innerText = "Password length must be at least 3";
-                return;
+            let password = "";
+            for (let i = 0; i < length; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
             }
 
-            let password = [];
-            password.push(letters[Math.floor(Math.random() * letters.length)]);
-            password.push(numbers[Math.floor(Math.random() * numbers.length)]);
-            password.push(symbols[Math.floor(Math.random() * symbols.length)]);
+            document.getElementById("password").innerText = password;
+            updateStrength(password);
+        }
 
-            const allChars = letters + numbers + symbols;
+        function updateStrength(pass) {
+            const bar = document.getElementById("strength-bar");
+            let strength = 0;
+            
+            if (pass.length > 8) strength += 40;
+            if (/[0-9]/.test(pass)) strength += 30;
+            if (/[!@#$%^&*()_+]/.test(pass)) strength += 30;
 
-            for (let i = 0; i < length - 3; i++) {
-                password.push(allChars[Math.floor(Math.random() * allChars.length)]);
-            }
+            bar.style.width = strength + "%";
+            
+            if (strength < 40) bar.style.backgroundColor = "#ff4d4d";
+            else if (strength < 80) bar.style.backgroundColor = "#ffd93d";
+            else bar.style.backgroundColor = "#2ecc71";
+        }
 
-            password = password.sort(() => Math.random() - 0.5).join("");
-
-            output.innerText = password;
+        async function copyPassword() {
+            const pass = document.getElementById("password").innerText;
+            if(pass === "Click Generate") return;
+            
+            await navigator.clipboard.writeText(pass);
+            alert("Password copied to clipboard!");
         }
     </script>
 
